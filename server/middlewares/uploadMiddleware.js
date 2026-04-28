@@ -2,7 +2,7 @@
 const path = require("path");
 const { uploadDir } = require("../utils/fileUtils");
 
-const maxSizeMb = Number(process.env.MAX_FILE_SIZE_MB || 8);
+const maxSizeMb = Number(process.env.MAX_FILE_SIZE_MB || 50);
 
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => cb(null, uploadDir),
