@@ -1,0 +1,30 @@
+﻿# Dependencies
+node_modules/
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+server/.env
+server/.env.*
+!server/.env.example
+client/.env
+client/.env.*
+!client/.env.example
+
+# Runtime / local data
+server/uploads/
+server/storage/index.json
+*.log
+logs/
+
+# Build output
+dist/
+client/dist/
+coverage/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
