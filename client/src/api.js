@@ -6,8 +6,29 @@ if (!API_BASE) {
   throw new Error("Missing VITE_API_BASE for production build.");
 }
 
+const USER_ID_KEY = "offline_kb_user_id";
+
+function getUserId() {
+  const existing = localStorage.getItem(USER_ID_KEY);
+  if (existing) return existing;
+
+  const generated = crypto.randomUUID().replace(/[^a-zA-Z0-9_-]/g, "");
+  localStorage.setItem(USER_ID_KEY, generated);
+  return generated;
+}
+
 async function request(path, options = {}) {
-  const response = await fetch(`${API_BASE}${path}`, options);
+  const userId = getUserId();
+  const headers = {
+    "x-user-id": userId,
+    ...(options.headers || {})
+  };
+
+  const response = await fetch(`${API_BASE}${path}`, {
+    ...options,
+    headers
+  });
+
   const data = await response.json();
   if (!response.ok) {
     throw new Error(data.error || "Request failed");

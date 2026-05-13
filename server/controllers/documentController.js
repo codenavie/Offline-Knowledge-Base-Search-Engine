@@ -10,7 +10,7 @@ async function uploadDocument(req, res, next) {
     }
 
     const extractedText = await extractText(req.file);
-    const result = searchService.upsertDocument({
+    const result = searchService.upsertUserDocument(req.userId, {
       title: req.file.originalname,
       text: extractedText
     });
@@ -35,7 +35,7 @@ async function uploadDocument(req, res, next) {
 function searchDocuments(req, res) {
   const q = sanitizeQuery(req.query.q);
   const started = Date.now();
-  const results = searchService.search(q);
+  const results = searchService.searchUserDocuments(req.userId, q);
   const durationMs = Date.now() - started;
 
   res.json({
@@ -46,12 +46,12 @@ function searchDocuments(req, res) {
   });
 }
 
-function listDocuments(_req, res) {
-  res.json({ documents: searchService.getDocuments() });
+function listDocuments(req, res) {
+  res.json({ documents: searchService.getUserDocuments(req.userId) });
 }
 
 function getDocument(req, res) {
-  const doc = searchService.getDocument(req.params.id);
+  const doc = searchService.getUserDocument(req.userId, req.params.id);
   if (!doc) return res.status(404).json({ error: "Document not found." });
 
   res.json({
@@ -66,7 +66,7 @@ function getDocument(req, res) {
 }
 
 function deleteDocument(req, res) {
-  const removed = searchService.deleteDocument(req.params.id);
+  const removed = searchService.deleteUserDocument(req.userId, req.params.id);
   if (!removed) {
     return res.status(404).json({ error: "Document not found." });
   }

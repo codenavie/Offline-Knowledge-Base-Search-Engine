@@ -3,6 +3,7 @@ const cors = require("cors");
 const dotenv = require("dotenv");
 const documentRoutes = require("./routes/documentRoutes");
 const errorHandler = require("./middlewares/errorMiddleware");
+const getUserId = require("./middlewares/userMiddleware");
 
 dotenv.config();
 
@@ -46,6 +47,7 @@ app.get("/health", (_req, res) => {
 app.get("/api", (_req, res) => {
   res.json({
     name: "Offline Knowledge Base Search API",
+    auth: "Pass x-user-id header to access user-scoped data.",
     endpoints: [
       "GET /health",
       "GET /api",
@@ -58,7 +60,7 @@ app.get("/api", (_req, res) => {
   });
 });
 
-app.use("/api", documentRoutes);
+app.use("/api", getUserId, documentRoutes);
 app.use(errorHandler);
 
 app.listen(port, () => {

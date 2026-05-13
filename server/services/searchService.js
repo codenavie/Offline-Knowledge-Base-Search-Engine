@@ -15,27 +15,31 @@ class SearchService {
     writeIndex(this.index);
   }
 
-  getDocuments() {
-    return Object.values(this.index.documents).map((doc) => ({
-      id: doc.id,
-      title: doc.title,
-      tokenCount: doc.tokenCount,
-      indexedAt: doc.indexedAt
-    }));
+  getUserDocuments(userId) {
+    return Object.values(this.index.documents)
+      .filter((doc) => doc.userId === userId)
+      .map((doc) => ({
+        id: doc.id,
+        title: doc.title,
+        tokenCount: doc.tokenCount,
+        indexedAt: doc.indexedAt
+      }));
   }
 
-  getDocument(documentId) {
-    return this.index.documents[documentId] || null;
+  getUserDocument(userId, documentId) {
+    const doc = this.index.documents[documentId] || null;
+    if (!doc || doc.userId !== userId) return null;
+    return doc;
   }
 
-  upsertDocument({ title, text }) {
+  upsertUserDocument(userId, { title, text }) {
     const tokens = tokenize(text);
     if (!tokens.length) {
       throw new Error("Document has no searchable text after normalization.");
     }
 
     const checksum = crypto.createHash("sha256").update(text).digest("hex");
-    const existing = Object.values(this.index.documents).find((doc) => doc.checksum === checksum);
+    const existing = Object.values(this.index.documents).find((doc) => doc.userId === userId && doc.checksum === checksum);
 
     if (existing) {
       return { document: existing, skipped: true };
@@ -44,6 +48,7 @@ class SearchService {
     const id = crypto.randomUUID();
     const doc = {
       id,
+      userId,
       title,
       text,
       tokens,
@@ -57,14 +62,15 @@ class SearchService {
     return { document: this.index.documents[id], skipped: false };
   }
 
-  deleteDocument(documentId) {
-    if (!this.index.documents[documentId]) return false;
+  deleteUserDocument(userId, documentId) {
+    const doc = this.index.documents[documentId];
+    if (!doc || doc.userId !== userId) return false;
     removeDocumentFromIndex(this.index, documentId);
     this.persist();
     return true;
   }
 
-  search(rawQuery) {
+  searchUserDocuments(userId, rawQuery) {
     const query = parseQuery(rawQuery);
     if (!query.terms.length && !query.phrases.length) {
       return [];
@@ -78,6 +84,13 @@ class SearchService {
     } else {
       candidateDocIds = new Set(Object.keys(this.index.documents));
     }
+
+    candidateDocIds = new Set(
+      [...candidateDocIds].filter((docId) => {
+        const doc = this.index.documents[docId];
+        return doc && doc.userId === userId;
+      })
+    );
 
     if (query.phrases.length) {
       const phraseTokenized = query.phrases.map((phrase) => tokenize(phrase));
