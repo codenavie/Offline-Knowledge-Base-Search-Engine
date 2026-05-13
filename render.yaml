@@ -1,0 +1,17 @@
+﻿services:
+  - type: web
+    name: offline-knowledge-base-search-engine
+    env: node
+    region: singapore
+    buildCommand: npm install
+    startCommand: npm run start --workspace server
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: CLIENT_URL
+        sync: false
+      - key: MAX_FILE_SIZE_MB
+        value: 50

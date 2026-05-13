@@ -27,10 +27,9 @@ Production-ready offline search system with a modular Node.js backend and Vue 3 
 - Duplicate content detection via checksum
 - In-memory cached index + persisted local JSON
 - Secure upload validation + file size limit + error middleware
-- Monochrome UI with theme toggle and smooth transitions
-- Instant search and JSON export of results
 
 ## API
+- `GET /health`
 - `POST /api/upload` (multipart form-data, key: `file`)
 - `GET /api/search?q=...`
 - `GET /api/documents`
@@ -44,15 +43,34 @@ Production-ready offline search system with a modular Node.js backend and Vue 3 
 4. Backend: `http://localhost:4000`
 5. Frontend: `http://localhost:5173`
 
-## Environment Variables (`server/.env`)
-- `PORT=4000`
+## Environment Variables
+### Server (`server/.env`)
+- `NODE_ENV=production`
+- `PORT=10000`
 - `CLIENT_URL=http://localhost:5173`
-- `MAX_FILE_SIZE_MB=8`
+- `MAX_FILE_SIZE_MB=50`
 
-## Performance Notes
-- Index is loaded into memory once and persisted on updates.
-- Search uses direct postings lookup + compact TF-IDF scoring path.
-- Unchanged/duplicate docs are skipped by SHA-256 checksum.
+### Frontend (`client/.env.production`)
+- `VITE_API_BASE=https://offline-knowledge-base-search-engine.onrender.com/api`
 
-## Project Goal Fit
-This implementation is built for offline, no-AI retrieval with clean architecture and deployment-minded defaults.
+## Production Deployment
+### Backend on Render
+- Build command: `npm install`
+- Start command: `npm run start --workspace server`
+- Set `CLIENT_URL` to your GitHub Pages URL.
+
+You can also bootstrap with `render.yaml` in this repo.
+
+### Frontend on GitHub Pages
+- `client/vite.config.js` has base path set for project pages.
+- Auto-deploy workflow is included at `.github/workflows/pages.yml`.
+- On push to `main`, Pages deploys from `client/dist`.
+
+## Manual Frontend Deploy (optional)
+- Build: `npm run build --workspace client`
+- Publish: `npm run deploy:client`
+
+## Verification Checklist
+- Backend health: `https://<render-service>.onrender.com/health`
+- Frontend live: `https://<username>.github.io/<repo>/`
+- Browser Network calls should target `https://<render-service>.onrender.com/api/...`
