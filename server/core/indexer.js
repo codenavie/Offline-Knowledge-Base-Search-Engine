@@ -16,7 +16,7 @@ function buildTermFrequencies(tokens) {
 }
 
 function addDocumentToIndex(index, document) {
-  const { id, tokens, tokenCount, title, checksum, text } = document;
+  const { id, userId, tokens, tokenCount, title, checksum, text } = document;
   const positionsByTerm = {};
 
   tokens.forEach((term, position) => {
@@ -31,6 +31,7 @@ function addDocumentToIndex(index, document) {
 
   index.documents[id] = {
     id,
+    userId,
     title,
     tokenCount,
     termFrequencies: buildTermFrequencies(tokens),
