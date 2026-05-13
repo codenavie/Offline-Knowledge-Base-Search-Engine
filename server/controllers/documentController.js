@@ -10,7 +10,7 @@ async function uploadDocument(req, res, next) {
     }
 
     const extractedText = await extractText(req.file);
-    const result = searchService.upsertUserDocument(req.userId, {
+    const result = searchService.upsertUserDocument(req.user.id, {
       title: req.file.originalname,
       text: extractedText
     });
@@ -35,7 +35,7 @@ async function uploadDocument(req, res, next) {
 function searchDocuments(req, res) {
   const q = sanitizeQuery(req.query.q);
   const started = Date.now();
-  const results = searchService.searchUserDocuments(req.userId, q);
+  const results = searchService.searchUserDocuments(req.user.id, q);
   const durationMs = Date.now() - started;
 
   res.json({
@@ -47,11 +47,11 @@ function searchDocuments(req, res) {
 }
 
 function listDocuments(req, res) {
-  res.json({ documents: searchService.getUserDocuments(req.userId) });
+  res.json({ documents: searchService.getUserDocuments(req.user.id) });
 }
 
 function getDocument(req, res) {
-  const doc = searchService.getUserDocument(req.userId, req.params.id);
+  const doc = searchService.getUserDocument(req.user.id, req.params.id);
   if (!doc) return res.status(404).json({ error: "Document not found." });
 
   res.json({
@@ -66,7 +66,7 @@ function getDocument(req, res) {
 }
 
 function deleteDocument(req, res) {
-  const removed = searchService.deleteUserDocument(req.userId, req.params.id);
+  const removed = searchService.deleteUserDocument(req.user.id, req.params.id);
   if (!removed) {
     return res.status(404).json({ error: "Document not found." });
   }

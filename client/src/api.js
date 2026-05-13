@@ -6,23 +6,43 @@ if (!API_BASE) {
   throw new Error("Missing VITE_API_BASE for production build.");
 }
 
-const USER_ID_KEY = "offline_kb_user_id";
+const TOKEN_KEY = "offline_kb_auth_token";
+const USER_KEY = "offline_kb_auth_user";
 
-function getUserId() {
-  const existing = localStorage.getItem(USER_ID_KEY);
-  if (existing) return existing;
+function getToken() {
+  return localStorage.getItem(TOKEN_KEY) || "";
+}
 
-  const generated = crypto.randomUUID().replace(/[^a-zA-Z0-9_-]/g, "");
-  localStorage.setItem(USER_ID_KEY, generated);
-  return generated;
+function setSession(token, user) {
+  if (token) localStorage.setItem(TOKEN_KEY, token);
+  if (user) localStorage.setItem(USER_KEY, JSON.stringify(user));
+}
+
+function clearSession() {
+  localStorage.removeItem(TOKEN_KEY);
+  localStorage.removeItem(USER_KEY);
+}
+
+function getCurrentUser() {
+  const raw = localStorage.getItem(USER_KEY);
+  if (!raw) return null;
+
+  try {
+    return JSON.parse(raw);
+  } catch (_error) {
+    return null;
+  }
 }
 
 async function request(path, options = {}) {
-  const userId = getUserId();
   const headers = {
-    "x-user-id": userId,
     ...(options.headers || {})
   };
+
+  const token = getToken();
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
 
   const response = await fetch(`${API_BASE}${path}`, {
     ...options,
@@ -34,6 +54,40 @@ async function request(path, options = {}) {
     throw new Error(data.error || "Request failed");
   }
   return data;
+}
+
+export async function registerUser(payload) {
+  const data = await request("/auth/register", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
+  setSession(data.token, data.user);
+  return data;
+}
+
+export async function loginUser(payload) {
+  const data = await request("/auth/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
+  setSession(data.token, data.user);
+  return data;
+}
+
+export async function fetchMe() {
+  const data = await request("/auth/me");
+  if (data.user) localStorage.setItem(USER_KEY, JSON.stringify(data.user));
+  return data.user;
+}
+
+export function logoutUser() {
+  clearSession();
+}
+
+export function isAuthenticated() {
+  return Boolean(getToken());
 }
 
 export function listDocuments() {
@@ -58,3 +112,5 @@ export function uploadDocument(file) {
   formData.append("file", file);
   return request("/upload", { method: "POST", body: formData });
 }
+
+export { getCurrentUser };

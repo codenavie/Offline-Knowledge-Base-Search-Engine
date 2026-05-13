@@ -13,12 +13,23 @@
       <RouterLink to="/" @click="open = false">Dashboard</RouterLink>
       <RouterLink to="/upload" @click="open = false">Upload</RouterLink>
       <RouterLink to="/search" @click="open = false">Search</RouterLink>
+      <span class="user" v-if="userEmail">{{ userEmail }}</span>
+      <button class="bau-btn bau-yellow logout" @click="$emit('logout')">Logout</button>
     </nav>
   </header>
 </template>
 
 <script setup>
 import { ref } from "vue";
+
+defineProps({
+  userEmail: {
+    type: String,
+    default: ""
+  }
+});
+
+defineEmits(["logout"]);
 
 const open = ref(false);
 </script>
@@ -64,6 +75,7 @@ const open = ref(false);
   display: none;
   gap: 8px;
   flex-wrap: wrap;
+  align-items: center;
 }
 
 .links.open {
@@ -81,6 +93,16 @@ const open = ref(false);
 
 .links a.router-link-active {
   background: var(--primary-yellow);
+}
+
+.user {
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.logout {
+  padding: 8px 10px;
 }
 
 @media (min-width: 768px) {
